@@ -15,6 +15,7 @@
  */
 package com.mysite.core.models;
 
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,9 @@ import com.day.cq.wcm.api.Page;
 import io.wcm.testing.mock.aem.junit5.AemContext;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
 import com.mysite.core.testcontext.AppAemContext;
+import com.code_intelligence.jazzer.junit.FuzzTest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,10 +60,23 @@ class HelloWorldModelTest {
     @Test
     void testGetMessage() throws Exception {
         // some very basic junit tests
-        String msg = hello.getMessage();
+        String msg = hello.getMessage("Jazzer");
         assertNotNull(msg);
         assertTrue(StringUtils.contains(msg, resource.getResourceType()));
         assertTrue(StringUtils.contains(msg, page.getPath()));
+
+        assertTrue(StringUtils.contains(msg, "Jazzer"));
+    }
+
+    @FuzzTest
+    void fuzzGetMessage(FuzzedDataProvider data) throws Exception {
+        String msg = hello.getMessage(data.consumeRemainingAsString());
+        assertNotNull(msg);
+        assertTrue(StringUtils.contains(msg, resource.getResourceType()));
+        assertTrue(StringUtils.contains(msg, page.getPath()));
+
+        // Does the result always contain exactly three newlines?
+        assertEquals(3, msg.chars().filter(ch -> ch == '\n').count());
     }
 
 }
